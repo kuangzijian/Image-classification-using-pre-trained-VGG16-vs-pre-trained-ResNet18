@@ -57,7 +57,7 @@ print(train_x.shape, train_y.shape)
 
 # converting validation images into torch format
 val_x = val_x.reshape(165, 3, 224, 224)
-val_x  = torch.from_numpy(val_x)
+val_x = torch.from_numpy(val_x)
 
 # converting the target into torch format
 val_y = val_y.astype(int)

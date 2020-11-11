@@ -44,9 +44,9 @@
 <!-- ABOUT THE PROJECT -->
 ## UAlberta-Multimedia-Master-Program-MM811-2020-Assignment-3
 
-This is a school project assigned by University of Alberta Mast of Multimedia program. This project focuses on topics:
+This is a school project assigned by University of Alberta Master of Multimedia program. This project focuses on topics:
 * Improved Transfer Learning using PyTorch for image classification
-* CNN using VGG16 vs ResNet18
+* CNN using pre-trained VGG16 vs pre-trained ResNet18
 
 ### Built With
 * [Pytorch](https://github.com/pytorch)
@@ -73,9 +73,9 @@ python train_with_resnet18.py
 
 ```
 Model  Training Accuracy  Validation Accuracy
-CNN               81.57%               76.26%
-VGG16             83.70%               83.47%
-ResNet18          83.70%               83.47%
+CNN               81.57%               65.26%
+VGG16             83.90%               82.82%
+ResNet18          85.70%               85.47%
 ```
 
 

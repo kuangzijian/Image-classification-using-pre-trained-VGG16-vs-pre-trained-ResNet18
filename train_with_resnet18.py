@@ -9,6 +9,7 @@ import torch
 from torch.autograd import Variable
 from torch.nn import Linear, CrossEntropyLoss, Sequential
 from torchvision import models
+import torch.nn as nn
 
 # loading dataset
 train = pd.read_csv('dataset/emergency_train.csv')
@@ -57,7 +58,7 @@ print(train_x.shape, train_y.shape)
 
 # converting validation images into torch format
 val_x = val_x.reshape(165, 3, 224, 224)
-val_x  = torch.from_numpy(val_x)
+val_x = torch.from_numpy(val_x)
 
 # converting the target into torch format
 val_y = val_y.astype(int)
@@ -66,8 +67,8 @@ val_y = torch.from_numpy(val_y)
 # shape of validation data
 print(val_x.shape, val_y.shape)
 
-# loading the pre-trained vgg16 model
-model = models.vgg16_bn(pretrained=True)
+# loading the pre-trained ResNet18 model
+model = models.resnet18(pretrained=True)
 
 # Freeze model weights
 for param in model.parameters():
@@ -77,12 +78,20 @@ for param in model.parameters():
 if torch.cuda.is_available():
     model = model.cuda()
 
-# Add on classifier
-model.classifier[6] = Sequential(
-                      Linear(4096, 2))
-model.classifier[6] = model.classifier[6].cuda()
-for param in model.classifier[6].parameters():
+# Add fine-tuning FC layers
+model.fc = Sequential(
+    Linear(512, 1000),
+    nn.ReLU(True),
+    Linear(1000, 4096),
+    nn.ReLU(True),
+    Linear(4096, 2))
+
+model.fc = model.fc.cuda()
+for param in model.fc.parameters():
     param.requires_grad = True
+
+# Check what our new model looks like
+print(model)
 
 # batch_size
 batch_size = 128
@@ -97,7 +106,7 @@ for i in tqdm(range(int(train_x.shape[0]/batch_size)+1)):
     input_data = inputs[i*batch_size:(i+1)*batch_size]
     label_data = labels[i*batch_size:(i+1)*batch_size]
     input_data, label_data = Variable(input_data.cuda()), Variable(label_data.cuda())
-    x = model.features(input_data)
+    x = model(input_data)
     data_x.extend(x.data.cpu().numpy())
     label_x.extend(label_data.data.cpu().numpy())
 
@@ -112,7 +121,7 @@ for i in tqdm(range(int(val_x.shape[0]/batch_size)+1)):
     input_data = inputs[i*batch_size:(i+1)*batch_size]
     label_data = labels[i*batch_size:(i+1)*batch_size]
     input_data, label_data = Variable(input_data.cuda()), Variable(label_data.cuda())
-    x = model.features(input_data)
+    x = model(input_data)
     data_y.extend(x.data.cpu().numpy())
     label_y.extend(label_data.data.cpu().numpy())
 
@@ -130,7 +139,7 @@ import torch.optim as optim
 criterion = CrossEntropyLoss()
 
 # specify optimizer (stochastic gradient descent) and learning rate
-optimizer = optim.Adam(model.classifier[6].parameters(), lr=0.0005)
+optimizer = optim.Adam(model.fc.parameters(), lr=0.0005)
 
 # batch size
 batch_size = 128
@@ -156,7 +165,7 @@ for epoch in tqdm(range(1, n_epochs + 1)):
 
         optimizer.zero_grad()
         # in case you wanted a semi-full example
-        outputs = model.classifier(batch_x.cuda())
+        outputs = model.fc(batch_x.cuda())
         loss = criterion(outputs, batch_y.long())
 
         training_loss.append(loss.item())
@@ -178,7 +187,7 @@ for i in tqdm(range(0, x_train.size()[0], batch_size)):
         batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
 
     with torch.no_grad():
-        output = model.classifier(batch_x.cuda())
+        output = model.fc(batch_x.cuda())
 
     softmax = torch.exp(output).cpu()
     prob = list(softmax.numpy())
@@ -205,7 +214,7 @@ for i in tqdm(range(0, x_val.size()[0], batch_size)):
         batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
 
     with torch.no_grad():
-        output = model.classifier(batch_x.cuda())
+        output = model.fc(batch_x.cuda())
 
     softmax = torch.exp(output).cpu()
     prob = list(softmax.numpy())
