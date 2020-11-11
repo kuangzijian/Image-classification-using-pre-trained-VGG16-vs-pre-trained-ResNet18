@@ -45,7 +45,7 @@
 ## UAlberta-Multimedia-Master-Program-MM811-2020-Assignment-3
 
 This is a school project assigned by University of Alberta Mast of Multimedia program. This project focuses on topics:
-* Improved Transfer Learning using PyTorch
+* Improved Transfer Learning using PyTorch for image classification
 * CNN using VGG16 vs ResNet18
 
 ### Built With
@@ -57,7 +57,7 @@ This is a school project assigned by University of Alberta Mast of Multimedia pr
 2. pip install -r requirements.txt
 ```
 
-### Improved Transfer Learning algorithm 
+### Improved Transfer Learning algorithm for image classification
 
 ```
 python test.py
