@@ -60,9 +60,23 @@ This is a school project assigned by University of Alberta Mast of Multimedia pr
 ### Improved Transfer Learning algorithm for image classification
 
 ```
-python test.py
-```
+- To run training/validation on the original CNN
+python train.py
 
+- To run training/validation on the improved pre-trained VGG16 model
+python train_with_vgg16.py
+
+- To run training/validation on the improved pre-trained ResNet18 model
+python train_with_resnet18.py
+```
+### Training/Validation outputs
+
+```
+Model  Training Accuracy  Validation Accuracy
+CNN               81.57%               76.26%
+VGG16             83.70%               83.47%
+ResNet18          83.70%               83.47%
+```
 
 
 <!-- CONTRIBUTING -->
