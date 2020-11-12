@@ -85,7 +85,7 @@ So dropout has been applied into the fine-tuning FC layers to avoid overfitting:
 
 ![Result after applying dropout](https://github.com/kuangzijian/UAlberta-Multimedia-Master-Program-MM811-2020-Assignment-3/blob/main/images/dropout.png)
 
-The result looks much better after applying dropout, to further solve overfitting issue, data augumentation will be applied ine next step.
+The result looks much better after applying dropout, to further solve overfitting issue, data augumentation will be applied in next step.
 
 ![Result after applying dropout](https://github.com/kuangzijian/UAlberta-Multimedia-Master-Program-MM811-2020-Assignment-3/blob/main/images/after.png)
 <!-- CONTRIBUTING -->
