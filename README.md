@@ -46,7 +46,7 @@
 
 This is a school project assigned by University of Alberta Master of Multimedia program. This project focuses on topics:
 * Improved Transfer Learning using PyTorch for image classification
-* CNN using pre-trained VGG16 vs pre-trained ResNet18
+* Image classification using pre-trained VGG16 vs pre-trained ResNet18
 
 ### Built With
 * [Pytorch](https://github.com/pytorch)
@@ -74,11 +74,20 @@ python train_with_resnet18.py
 ```
 Model  Training Accuracy  Validation Accuracy
 CNN               81.57%               65.26%
-VGG16             83.90%               82.82%
-ResNet18          85.70%               85.47%
+VGG16             83.70%               79.62%
+ResNet18          96.58%               76.33%
 ```
+After applying pre-trained ResNet18 to our image classifier, the result shows there is overfitting issue:
 
+![Result before applying dropout](https://github.com/kuangzijian/UAlberta-Multimedia-Master-Program-MM811-2020-Assignment-3/blob/main/images/before.png)
 
+So dropout has been applied into the fine-tuning FC layers to avoid overfitting:
+
+![Result after applying dropout](https://github.com/kuangzijian/UAlberta-Multimedia-Master-Program-MM811-2020-Assignment-3/blob/main/images/dropout.png)
+
+The result looks much better after applying dropout, to further solve overfitting issue, data augumentation will be applied ine next step.
+
+![Result after applying dropout](https://github.com/kuangzijian/UAlberta-Multimedia-Master-Program-MM811-2020-Assignment-3/blob/main/images/after.png)
 <!-- CONTRIBUTING -->
 ## Contributing
 
