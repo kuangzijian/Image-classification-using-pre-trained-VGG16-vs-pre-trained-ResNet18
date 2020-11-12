@@ -6,8 +6,8 @@ from skimage.transform import resize
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import torch
-from torch.autograd import Variable
-from torch.nn import Linear, CrossEntropyLoss, Sequential
+import torch.optim as optim
+from torch.nn import CrossEntropyLoss, Sequential
 from torchvision import models
 import torch.nn as nn
 
@@ -55,7 +55,6 @@ train_y = torch.from_numpy(train_y)
 # shape of training data
 print(train_x.shape, train_y.shape)
 
-
 # converting validation images into torch format
 val_x = val_x.reshape(165, 3, 224, 224)
 val_x = torch.from_numpy(val_x)
@@ -80,60 +79,24 @@ if torch.cuda.is_available():
 
 # Add fine-tuning FC layers
 model.fc = Sequential(
-    Linear(512, 1000),
+    nn.Linear(512, 1000),
     nn.ReLU(True),
-    Linear(1000, 4096),
+    nn.Dropout(),
+    nn.Linear(1000, 4096),
     nn.ReLU(True),
-    Linear(4096, 2))
+    nn.Dropout(),
+    nn.Linear(4096, 2),
+    nn.LogSoftmax(dim=1))
 
 model.fc = model.fc.cuda()
 for param in model.fc.parameters():
     param.requires_grad = True
 
-# Check what our new model looks like
+# Check how does our new model look like
 print(model)
 
 # batch_size
 batch_size = 128
-
-# extracting features for train data
-data_x = []
-label_x = []
-
-inputs, labels = train_x, train_y
-
-for i in tqdm(range(int(train_x.shape[0]/batch_size)+1)):
-    input_data = inputs[i*batch_size:(i+1)*batch_size]
-    label_data = labels[i*batch_size:(i+1)*batch_size]
-    input_data, label_data = Variable(input_data.cuda()), Variable(label_data.cuda())
-    x = model(input_data)
-    data_x.extend(x.data.cpu().numpy())
-    label_x.extend(label_data.data.cpu().numpy())
-
-
-# extracting features for validation data
-data_y = []
-label_y = []
-
-inputs, labels = val_x, val_y
-
-for i in tqdm(range(int(val_x.shape[0]/batch_size)+1)):
-    input_data = inputs[i*batch_size:(i+1)*batch_size]
-    label_data = labels[i*batch_size:(i+1)*batch_size]
-    input_data, label_data = Variable(input_data.cuda()), Variable(label_data.cuda())
-    x = model(input_data)
-    data_y.extend(x.data.cpu().numpy())
-    label_y.extend(label_data.data.cpu().numpy())
-
-# converting the features into torch format
-x_train = torch.from_numpy(np.array(data_x))
-x_train = x_train.view(x_train.size(0), -1)
-y_train = torch.from_numpy(np.array(label_x))
-x_val = torch.from_numpy(np.array(data_y))
-x_val = x_val.view(x_val.size(0), -1)
-y_val = torch.from_numpy(np.array(label_y))
-
-import torch.optim as optim
 
 # specify loss function (categorical cross-entropy)
 criterion = CrossEntropyLoss()
@@ -141,31 +104,24 @@ criterion = CrossEntropyLoss()
 # specify optimizer (stochastic gradient descent) and learning rate
 optimizer = optim.Adam(model.fc.parameters(), lr=0.0005)
 
-# batch size
 batch_size = 128
-
-# number of epochs to train the model
 n_epochs = 30
 
 for epoch in tqdm(range(1, n_epochs + 1)):
-
     # keep track of training and validation loss
     train_loss = 0.0
-
-    permutation = torch.randperm(x_train.size()[0])
-
+    permutation = torch.randperm(train_x.size()[0])
     training_loss = []
-    for i in range(0, x_train.size()[0], batch_size):
+    for i in range(0, train_x.size()[0], batch_size):
 
         indices = permutation[i:i + batch_size]
-        batch_x, batch_y = x_train[indices], y_train[indices]
+        batch_x, batch_y = train_x[indices], train_y[indices]
 
         if torch.cuda.is_available():
             batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
 
         optimizer.zero_grad()
-        # in case you wanted a semi-full example
-        outputs = model.fc(batch_x.cuda())
+        outputs = model(batch_x.cuda())
         loss = criterion(outputs, batch_y.long())
 
         training_loss.append(loss.item())
@@ -178,19 +134,18 @@ for epoch in tqdm(range(1, n_epochs + 1)):
 # prediction for training set
 prediction = []
 target = []
-permutation = torch.randperm(x_train.size()[0])
-for i in tqdm(range(0, x_train.size()[0], batch_size)):
+permutation = torch.randperm(train_x.size()[0])
+for i in tqdm(range(0, train_x.size()[0], batch_size)):
     indices = permutation[i:i + batch_size]
-    batch_x, batch_y = x_train[indices], y_train[indices]
+    batch_x, batch_y = train_x[indices], train_y[indices]
 
     if torch.cuda.is_available():
         batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
 
     with torch.no_grad():
-        output = model.fc(batch_x.cuda())
+        output = model(batch_x.cuda())
 
-    softmax = torch.exp(output).cpu()
-    prob = list(softmax.numpy())
+    prob = list(output.cpu().numpy())
     predictions = np.argmax(prob, axis=1)
     prediction.append(predictions)
     target.append(batch_y)
@@ -205,19 +160,18 @@ print('training accuracy: \t', np.average(accuracy))
 # prediction for validation set
 prediction_val = []
 target_val = []
-permutation = torch.randperm(x_val.size()[0])
-for i in tqdm(range(0, x_val.size()[0], batch_size)):
+permutation = torch.randperm(val_x.size()[0])
+for i in tqdm(range(0, val_x.size()[0], batch_size)):
     indices = permutation[i:i + batch_size]
-    batch_x, batch_y = x_val[indices], y_val[indices]
+    batch_x, batch_y = val_x[indices], val_y[indices]
 
     if torch.cuda.is_available():
         batch_x, batch_y = batch_x.cuda(), batch_y.cuda()
 
     with torch.no_grad():
-        output = model.fc(batch_x.cuda())
+        output = model(batch_x.cuda())
 
-    softmax = torch.exp(output).cpu()
-    prob = list(softmax.numpy())
+    prob = list(output.cpu().numpy())
     predictions = np.argmax(prob, axis=1)
     prediction_val.append(predictions)
     target_val.append(batch_y)
