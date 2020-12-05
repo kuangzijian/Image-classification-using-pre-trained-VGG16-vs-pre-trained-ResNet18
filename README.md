@@ -42,9 +42,9 @@
 
 
 <!-- ABOUT THE PROJECT -->
-## UAlberta-Multimedia-Master-Program-MM811-2020-Assignment-3
+## Image classification using pre-trained VGG16 vs pre-trained ResNet18
 
-This is a school project assigned by University of Alberta Master of Multimedia program. This project focuses on topics:
+This project focuses on topics:
 * Improved Transfer Learning using PyTorch for image classification
 * Image classification using pre-trained VGG16 vs pre-trained ResNet18
 
